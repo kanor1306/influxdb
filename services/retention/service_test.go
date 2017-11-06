@@ -79,7 +79,7 @@ func TestService_8819_repro(t *testing.T) {
 
 func testService_8819_repro(t *testing.T) (*Service, chan error) {
 	c := retention.NewConfig()
-	c.CheckInterval = toml.Duration(time.Millisecond)
+	c.CheckInterval = toml.Duration(10 * time.Millisecond)
 	s := NewService(c)
 	errC := make(chan error, 1) // Buffer Important to prevent deadlock.
 

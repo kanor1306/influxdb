@@ -79,6 +79,12 @@ func (s *Service) run() {
 			return
 
 		case <-ticker.C:
+			select {
+			case <-s.done:
+				return
+			default:
+			}
+
 			s.logger.Info("Retention policy shard deletion check commencing.")
 
 			type deletionInfo struct {
