@@ -21,6 +21,7 @@ const LoadFactor = 80
 type MeasurementElem interface {
 	Name() []byte
 	Deleted() bool
+	HasSeries() bool
 }
 
 // MeasurementElems represents a list of MeasurementElem.
@@ -113,6 +114,15 @@ func (p measurementMergeElem) Deleted() bool {
 		return false
 	}
 	return p[0].Deleted()
+}
+
+func (p measurementMergeElem) HasSeries() bool {
+	for _, v := range p {
+		if v.HasSeries() {
+			return true
+		}
+	}
+	return false
 }
 
 // filterUndeletedMeasurementIterator returns all measurements which are not deleted.
@@ -455,6 +465,12 @@ func (itr *seriesMergeIterator) Next() tsdb.SeriesElem {
 	return e
 }
 
+func (itr *seriesMergeIterator) Close() {
+	for _, v := range itr.itrs {
+		v.Close()
+	}
+}
+
 // IntersectSeriesIterators returns an iterator that only returns series which
 // occur in both iterators. If both series have associated expressions then
 // they are combined together.
@@ -518,6 +534,12 @@ func (itr *seriesIntersectIterator) Next() (e tsdb.SeriesElem) {
 
 		itr.buf[0], itr.buf[1] = nil, nil
 		return &itr.e
+	}
+}
+
+func (itr *seriesIntersectIterator) Close() {
+	for _, v := range itr.itrs {
+		v.Close()
 	}
 }
 
@@ -590,6 +612,12 @@ func (itr *seriesUnionIterator) Next() (e tsdb.SeriesElem) {
 	return &itr.e
 }
 
+func (itr *seriesUnionIterator) Close() {
+	for _, v := range itr.itrs {
+		v.Close()
+	}
+}
+
 // DifferenceSeriesIterators returns an iterator that only returns series which
 // occur the first iterator but not the second iterator.
 func DifferenceSeriesIterators(itr0, itr1 tsdb.SeriesIterator) tsdb.SeriesIterator {
@@ -642,6 +670,12 @@ func (itr *seriesDifferenceIterator) Next() (e tsdb.SeriesElem) {
 	}
 }
 
+func (itr *seriesDifferenceIterator) Close() {
+	for _, v := range itr.itrs {
+		v.Close()
+	}
+}
+
 // filterUndeletedSeriesIterator returns all series which are not deleted.
 type filterUndeletedSeriesIterator struct {
 	itr tsdb.SeriesIterator
@@ -665,6 +699,10 @@ func (itr *filterUndeletedSeriesIterator) Next() tsdb.SeriesElem {
 		}
 		return e
 	}
+}
+
+func (itr *filterUndeletedSeriesIterator) Close() {
+	itr.itr.Close()
 }
 
 // seriesExprElem holds a series and its associated filter expression.
@@ -703,6 +741,10 @@ func (itr *seriesExprIterator) Next() tsdb.SeriesElem {
 		return nil
 	}
 	return &itr.e
+}
+
+func (itr *seriesExprIterator) Close() {
+	itr.itr.Close()
 }
 
 // seriesIDIterator represents a iterator over a list of series ids.

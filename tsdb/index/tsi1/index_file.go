@@ -251,7 +251,7 @@ func (f *IndexFile) TagKeySeriesIterator(name, key []byte) tsdb.SeriesIterator {
 	var itrs []tsdb.SeriesIterator
 	for ve := vitr.Next(); ve != nil; ve = vitr.Next() {
 		sitr := &rawSeriesIDIterator{data: ve.(*TagBlockValueElem).series.data}
-		itrs = append(itrs, newSeriesDecodeIterator(&f.sblk, sitr))
+		itrs = append(itrs, newSeriesDecodeIterator(f, &f.sblk, sitr))
 	}
 
 	return MergeSeriesIterators(itrs...)
@@ -273,6 +273,7 @@ func (f *IndexFile) TagValueSeriesIterator(name, key, value []byte) tsdb.SeriesI
 
 	// Create an iterator over value's series.
 	return newSeriesDecodeIterator(
+		f,
 		&f.sblk,
 		&rawSeriesIDIterator{
 			n:    ve.(*TagBlockValueElem).series.n,

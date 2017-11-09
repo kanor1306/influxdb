@@ -202,12 +202,15 @@ func TestMergeSeriesIterators(t *testing.T) {
 
 // MeasurementElem represents a test implementation of tsi1.MeasurementElem.
 type MeasurementElem struct {
-	name    []byte
-	deleted bool
+	name      []byte
+	deleted   bool
+	hasSeries bool
 }
 
-func (e *MeasurementElem) Name() []byte                        { return e.name }
-func (e *MeasurementElem) Deleted() bool                       { return e.deleted }
+func (e *MeasurementElem) Name() []byte    { return e.name }
+func (e *MeasurementElem) Deleted() bool   { return e.deleted }
+func (e *MeasurementElem) HasSeries() bool { return e.hasSeries }
+
 func (e *MeasurementElem) TagKeyIterator() tsi1.TagKeyIterator { return nil }
 
 // MeasurementIterator represents an iterator over a slice of measurements.
@@ -298,6 +301,8 @@ func (itr *SeriesIterator) Next() (e tsdb.SeriesElem) {
 	e, itr.Elems = &itr.Elems[0], itr.Elems[1:]
 	return e
 }
+
+func (itr *SeriesIterator) Close() {}
 
 // MustTempDir returns a temporary directory. Panic on error.
 func MustTempDir() string {

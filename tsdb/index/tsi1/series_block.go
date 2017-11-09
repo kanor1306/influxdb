@@ -283,16 +283,20 @@ func (itr *seriesBlockIterator) Next() tsdb.SeriesElem {
 	}
 }
 
+func (itr *seriesBlockIterator) Close() {}
+
 // seriesDecodeIterator decodes a series id iterator into unmarshaled elements.
 type seriesDecodeIterator struct {
+	f    *IndexFile
 	itr  seriesIDIterator
 	sblk *SeriesBlock
 	e    SeriesBlockElem // buffer
 }
 
 // newSeriesDecodeIterator returns a new instance of seriesDecodeIterator.
-func newSeriesDecodeIterator(sblk *SeriesBlock, itr seriesIDIterator) *seriesDecodeIterator {
-	return &seriesDecodeIterator{sblk: sblk, itr: itr}
+func newSeriesDecodeIterator(f *IndexFile, sblk *SeriesBlock, itr seriesIDIterator) *seriesDecodeIterator {
+	f.Retain()
+	return &seriesDecodeIterator{f: f, sblk: sblk, itr: itr}
 }
 
 // Next returns the next series element.
@@ -306,6 +310,10 @@ func (itr *seriesDecodeIterator) Next() tsdb.SeriesElem {
 	// Read next element.
 	itr.e.UnmarshalBinary(itr.sblk.data[id:])
 	return &itr.e
+}
+
+func (itr *seriesDecodeIterator) Close() {
+	itr.f.Release()
 }
 
 // SeriesBlockElem represents a series element in the series list.

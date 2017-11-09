@@ -76,6 +76,7 @@ type SeriesElem interface {
 // SeriesIterator represents a iterator over a list of series.
 type SeriesIterator interface {
 	Next() SeriesElem
+	Close()
 }
 
 // IndexFormat represents the format for an index.

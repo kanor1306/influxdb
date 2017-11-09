@@ -1109,3 +1109,5 @@ func (itr *seriesIterator) Next() tsdb.SeriesElem {
 	itr.keys = itr.keys[1:]
 	return s
 }
+
+func (itr *seriesIterator) Close() {}

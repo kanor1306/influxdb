@@ -30,6 +30,7 @@ func TestFileSet_SeriesIterator(t *testing.T) {
 		if itr == nil {
 			t.Fatal("expected iterator")
 		}
+		defer itr.Close()
 
 		if e := itr.Next(); string(e.Name()) != `cpu` || e.Tags().String() != `[{region east}]` {
 			t.Fatalf("unexpected series: %s/%s", e.Name(), e.Tags().String())
@@ -60,6 +61,7 @@ func TestFileSet_SeriesIterator(t *testing.T) {
 		if itr == nil {
 			t.Fatal("expected iterator")
 		}
+		defer itr.Close()
 
 		if e := itr.Next(); string(e.Name()) != `cpu` || e.Tags().String() != `[{region east}]` {
 			t.Fatalf("unexpected series: %s/%s", e.Name(), e.Tags().String())
@@ -100,6 +102,7 @@ func TestFileSet_MeasurementSeriesIterator(t *testing.T) {
 		if itr == nil {
 			t.Fatal("expected iterator")
 		}
+		defer itr.Close()
 
 		if e := itr.Next(); string(e.Name()) != `cpu` || e.Tags().String() != `[{region east}]` {
 			t.Fatalf("unexpected series: %s/%s", e.Name(), e.Tags().String())
@@ -127,6 +130,7 @@ func TestFileSet_MeasurementSeriesIterator(t *testing.T) {
 		if itr == nil {
 			t.Fatalf("expected iterator")
 		}
+		defer itr.Close()
 
 		if e := itr.Next(); string(e.Name()) != `cpu` || e.Tags().String() != `[{region east}]` {
 			t.Fatalf("unexpected series: %s/%s", e.Name(), e.Tags().String())

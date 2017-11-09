@@ -93,6 +93,7 @@ func TestLogFile_SeriesStoredInOrder(t *testing.T) {
 	if itr == nil {
 		t.Fatal("nil iterator")
 	}
+	defer itr.Close()
 
 	mname := []string{"cpu", "mem"}
 	var j int

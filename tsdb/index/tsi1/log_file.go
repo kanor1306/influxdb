@@ -267,7 +267,7 @@ func (f *LogFile) TagKeySeriesIterator(name, key []byte) tsdb.SeriesIterator {
 		if len(tv.series) == 0 {
 			continue
 		}
-		itrs = append(itrs, newLogSeriesIterator(tv.series))
+		itrs = append(itrs, newLogSeriesIterator(f, tv.series))
 	}
 
 	return MergeSeriesIterators(itrs...)
@@ -383,7 +383,7 @@ func (f *LogFile) TagValueSeriesIterator(name, key, value []byte) tsdb.SeriesIte
 		return nil
 	}
 
-	return newLogSeriesIterator(tv.series)
+	return newLogSeriesIterator(f, tv.series)
 }
 
 // MeasurementN returns the total number of measurements.
@@ -753,7 +753,8 @@ func (f *LogFile) SeriesIterator() tsdb.SeriesIterator {
 	if len(series) == 0 {
 		return nil
 	}
-	return &logSeriesIterator{series: series}
+	f.Retain()
+	return &logSeriesIterator{f: f, series: series}
 }
 
 // createMeasurementIfNotExists returns a measurement by name.
@@ -792,7 +793,7 @@ func (f *LogFile) MeasurementSeriesIterator(name []byte) tsdb.SeriesIterator {
 	if mm == nil || len(mm.series) == 0 {
 		return nil
 	}
-	return newLogSeriesIterator(mm.series)
+	return newLogSeriesIterator(f, mm.series)
 }
 
 // CompactTo compacts the log file and writes it to w.
@@ -1290,6 +1291,17 @@ type logMeasurement struct {
 
 func (m *logMeasurement) Name() []byte  { return m.name }
 func (m *logMeasurement) Deleted() bool { return m.deleted }
+func (m *logMeasurement) HasSeries() bool {
+	if m.deleted {
+		return false
+	}
+	for _, v := range m.series {
+		if !v.deleted {
+			return true
+		}
+	}
+	return false
+}
 
 func (m *logMeasurement) createTagSetIfNotExists(key []byte) logTagKey {
 	ts, ok := m.tagSet[string(key)]
@@ -1432,17 +1444,19 @@ func (itr *logTagValueIterator) Next() (e TagValueElem) {
 
 // logSeriesIterator represents an iterator over a slice of series.
 type logSeriesIterator struct {
+	f      *LogFile
 	series logSeries
 }
 
 // newLogSeriesIterator returns a new instance of logSeriesIterator.
 // All series are copied to the iterator.
-func newLogSeriesIterator(m map[string]*logSerie) *logSeriesIterator {
+func newLogSeriesIterator(f *LogFile, m map[string]*logSerie) *logSeriesIterator {
 	if len(m) == 0 {
 		return nil
 	}
 
-	itr := logSeriesIterator{series: make(logSeries, 0, len(m))}
+	f.Retain()
+	itr := logSeriesIterator{f: f, series: make(logSeries, 0, len(m))}
 	for _, s := range m {
 		itr.series = append(itr.series, *s)
 	}
@@ -1458,6 +1472,10 @@ func (itr *logSeriesIterator) Next() (e tsdb.SeriesElem) {
 	}
 	e, itr.series = &itr.series[0], itr.series[1:]
 	return e
+}
+
+func (itr *logSeriesIterator) Close() {
+	itr.f.Release()
 }
 
 // FormatLogFileName generates a log filename for the given index.
